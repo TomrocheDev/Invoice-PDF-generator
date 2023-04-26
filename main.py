@@ -61,9 +61,13 @@ client_cred_normal(expiration_date)
 
 pdf.ln(10)
 
+pdf.set_draw_color(r=80, g=80, b=80)
+pdf.line(11, 111, 200, 111)
+pdf.line(11, 117, 200, 117)
+
 # Create table with used services
 ## Create table header
-pdf.set_font(family="Helvetica", style="B", size=8)
+pdf.set_font(family="Helvetica", style="B", size=9)
 pdf.cell(w=90, h=8, txt="Name/Description")
 pdf.cell(w=20, h=8, txt="Quantity", ln=0)
 pdf.cell(w=20, h=8, txt="Price", ln=0)
@@ -71,16 +75,65 @@ pdf.cell(w=20, h=8, txt="Tax", ln=0)
 pdf.cell(w=20, h=8, txt="Total Price", ln=1)
 
 # Table content loaded from CSV file
+total_amounts = []
+
 for index, item in products_dataframe.iterrows():
     pdf.set_font(family="Helvetica", size=8)
     pdf.set_text_color(80, 80, 80)
-    pdf.cell(w=90, h=8, txt=str(item["Name/Description"]))
-    pdf.cell(w=20, h=8, txt=str(item["Quantity"]).replace(".",","), ln=0)
-    pdf.cell(w=20, h=8, txt=chr(128) + str(item["Price"]), ln=0)
-    pdf.cell(w=20, h=8, txt=str(item["Tax"]) + "%", ln=0)
-    pdf.cell(w=20, h=8, txt=chr(128) + str(item["Price"] * item["Quantity"]), ln=1)
+    pdf.cell(w=90, h=5, txt=str(item["Name/Description"]))
+    pdf.cell(w=20, h=5, txt=str(item["Quantity"]).replace(".", ","), ln=0)
+    pdf.cell(w=20, h=5, txt=chr(128) + str(item["Price"]), ln=0)
+    pdf.cell(w=20, h=5, txt=str(item["Tax"]) + "%", ln=0)
+    pdf.cell(w=20, h=5, txt=chr(128) + str(item["Price"] * item["Quantity"]), ln=1)
+    total_amounts.append(item["Price"] * item["Quantity"])
+
+pdf.ln(8)
+
+# Create table with applied taxes
+amount_excl_tax = sum(total_amounts)
+rounded_amount_excl_tax = str(round(amount_excl_tax, 2))
+tax = (sum(total_amounts) / 100) * 21
+rounded_tax = str(round(tax, 2))
+total_amount_incl_tax = sum(total_amounts) + (sum(total_amounts) / 100) * 21
+rounded_total_amount_incl_tax = str(round(total_amount_incl_tax, 2))
+
+pdf.set_font(family="Helvetica", size=9)
+pdf.set_text_color(40, 40, 40)
+pdf.cell(w=40, h=5, txt="Total price excl. tax: ", ln=0)
+pdf.cell(w=100, h=5, txt=chr(128) + rounded_amount_excl_tax, ln=1)
+pdf.cell(w=40, h=5, txt="Tax: ", ln=0)
+pdf.cell(w=100, h=5, txt=chr(128) + rounded_tax, ln=1)
+
+pdf.ln(4)
+
+pdf.line(11, 157, 100, 157)
+
+pdf.cell(w=40, h=5, txt="Total amount incl. tax: ", ln=0)
+pdf.set_font(family="Helvetica", style="B")
+pdf.cell(w=100, h=5, txt=chr(128) + rounded_total_amount_incl_tax, ln=1)
+
+pdf.ln(10)
+
+# Ask for payment
+message = f"""We kindly ask you to fulfill the payment before {expiration_date}. Our bank account number: 
+NL123456789123456. 
+"""
+
+pdf.set_font(family="Helvetica", size=9)
+pdf.cell(w=0, h=5, txt=message, ln=1)
+pdf.cell(w=0, h=5, txt="Make sure you reference your invoice number.", ln=1)
+
+pdf.ln(95)
+
+# Create footer
+footer = "Company: Demo B.V.     -     Bank account: NL123456789123456     -     Phone: +31 12345678     -     " \
+         "Email: tom.roche@demobv.com"
+
+pdf.set_font(family="Helvetica")
+pdf.set_text_color(100, 100, 100)
+pdf.cell(w=0, h=10, txt=footer, align="L", ln=0)
 
 # Create a output file
-pdf.output("invoice.pdf")
+pdf.output("demo invoice/demo_invoice.PDF")
 
 
